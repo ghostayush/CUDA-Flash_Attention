@@ -26,12 +26,12 @@ For GPT-3 (96 layers, 96 heads, N=2048): naive needs **~86 GB** just for attenti
 
 *(Run `./flash_bench` to reproduce on your GPU)*
 
-| N | Naive (ms) | Flash (ms) | Speedup | Naive mem | Flash mem |
-|---|------------|------------|---------|-----------|-----------|
-| 128 | — | — | — | ~0.5 MB | ~34 KB |
-| 256 | — | — | — | ~2 MB | ~34 KB |
-| 512 | — | — | — | ~8 MB | ~34 KB |
-| 1024 | — | — | — | ~32 MB | ~34 KB |
+| N | d | Naive (ms) | Flash (ms) | Speedup | Memory naive | Memory flash |
+|---|---|------------|------------|---------|--------------|--------------|
+| 128 | 64 | 0.510 | 0.993 | **0.51x** | 0.5 MB | ~34 KB (SRAM) |
+| 256 | 64 | 1.634 | 3.762 | **0.43x** | 2.1 MB | ~34 KB (SRAM) |
+| 512 | 64 | 3.586 | 13.985 | **0.26x** | 8.4 MB | ~34 KB (SRAM) |
+| 1024 | 64 | 13.409 | 61.444 | **0.22x** | 33.6 MB | ~34 KB (SRAM) |
 
 *Fill in after running on your T4. Flash memory stays constant — that's the point.*
 
