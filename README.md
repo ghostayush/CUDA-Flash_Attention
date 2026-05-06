@@ -103,25 +103,6 @@ O, L = flash_attn_cuda.forward(Q, K, V)
 
 ---
 
-## Interview talking points
-
-**Q: What is the key insight of Flash Attention?**  
-Attention is memory-bandwidth bound, not compute bound. The N×N score matrix is never needed all at once — we can compute softmax(QK^T/√d)V tile by tile using the online softmax algorithm, keeping only `O(Nd)` data in fast SRAM at any time.
-
-**Q: What is the online softmax algorithm?**  
-A Welford-style one-pass algorithm that maintains a running `(max_so_far, sum_so_far)` pair. When a new value x arrives: `m_new = max(m, x)`, `l = l * exp(m - m_new) + exp(x - m_new)`. No second pass needed — prevents reading the data twice.
-
-**Q: What is HBM and why does it matter?**  
-High Bandwidth Memory — the large, slow GPU DRAM (16 GB on T4). Reading from HBM takes ~microseconds. The shared memory (SRAM) on each SM is ~48 KB but has ~10x the bandwidth. Flash attention keeps the hot tiles in SRAM, reading HBM only `O(N/Bc)` times per tile instead of `O(N)` times.
-
-**Q: What does the logsumexp `L` save, and why?**  
-For the backward pass. Instead of recomputing `softmax(QK^T/√d)`, which would require materialising the N×N matrix again, we save `L[i] = log(∑ exp(s_ij)) + m_i` (logsumexp). The backward can then reconstruct `P[i,j] = exp(s_ij - L[i])` without a second forward pass through the full N×N matrix.
-
-**Q: What is `__shfl_down_sync` and where do you use it?**  
-A warp-level intrinsic that directly moves a value between registers of threads in the same warp — no shared memory needed. Used in the online softmax kernel to reduce `(max, sum)` across 32 threads in a warp in `O(log 32) = 5` steps.
-
----
-
 ## Tech stack
 - **Language:** CUDA C++ (C++17), Python 3
 - **Libraries:** cuBLAS, CUDA Runtime, PyTorch (cpp_extension)
